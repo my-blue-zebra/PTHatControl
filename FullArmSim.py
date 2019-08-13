@@ -148,6 +148,11 @@ for curve in points_list:
     
 """
 #poly = Curve(points)
+
+
+
+
+
  
 ## WOKRING ON THE IKS TO SOLVE FOR ANGLES    
 # Important constants
@@ -161,9 +166,14 @@ error_val = np.nan
 SPR = 200 # Steps per Rev
 Gear = 20
 TPS = 0.5 # Time Per Step
+hatprop = False
 
 stored_angles = np.zeros([0,3])
 thetas =  np.zeros([1,3])
+
+if hatprop: PT = CommandMaker.StartHat(True)
+
+
 for curve in points_list:
     Curves = Curve(curve)
     poly = np.append(poly,Curves,axis=0)
@@ -184,6 +194,7 @@ for curve in points_list:
             
     # Initiate Buffer
     InitBuff = "H0000*"
+    if hatprop: PT.BufferEnable()
     
     # For future use, to Loop the command is "W0000*"
     # Max 100 Commands, so split between 3 motors
@@ -200,30 +211,17 @@ for curve in points_list:
         if angle == 0: RS = 1
         if angle == len(SingleArc)-2: RF = 1
         
-        Commands = CommandMaker.MakeCommand(Steps, Dirs, Freq, RS, RF)
-        #print(Commands)
-        #Time4Curve = 1 # seconds
-        #SendBufferCommand(Curves,Time4Curve)
-    # Send Run Buffer Command
-    
-    
+        if hatprop: Commands = CommandMaker.MakeCommand(PT, Steps, Dirs, Freq, RS, RF, SPR, Gear)
+   
     RunBuff = "Z0000*"
-    Empty = False # state of the buffer
-    """
-    while Empty == False:
-        if SerialReply == "**Buffer Empty**":
-            Empty = True
-    """
-
-#print("FINAL ANGLES: ", stored_angles)
-
-
-    
-    
-
-
-
-    
+    if hatprop: 
+        PT.BufferStart()
+        Empty = 0 # state of the buffer
+        while Empty < 4:
+            Empty = PT.Pollport
+            if Empty > 0:
+                print(Empty)
+        print(Empty)
 # remove """s to plot the course of the arm    
 #"""
 fig = plt.figure()
@@ -232,10 +230,9 @@ ax = fig.gca(projection = '3d')
 #ax.plot(poly[:,0],poly[:,1])
 ax.scatter(points[:,0],points[:,1],points[:,2],'rx')
 ax.plot(poly[:,0],poly[:,1],poly[:,2], )
-
-
-
-
+#"""
+    
+#"""
 fig2 = plt.figure()
 ax2 = fig2.gca()
 
@@ -248,6 +245,16 @@ plt.title("Angle of Motors through a Bezier Path")
 plt.legend()
 plt.show()
 #"""
+#print("FINAL ANGLES: ", stored_angles)
+
+
+    
+    
+
+
+
+    
+
 
 
 """
