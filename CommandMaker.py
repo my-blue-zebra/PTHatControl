@@ -1,0 +1,51 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 12 20:11:52 2019
+Command generator
+@author: micha
+"""
+import numpy as np
+def CalcSteps(AngleOld, AngleNew, StepsPerRevolution, Gearing):
+    AngleDiff = AngleNew-AngleOld
+    
+    Dirs = np.zeros([3])    
+    AnglePerStep = 2*np.pi / (StepsPerRevolution * Gearing)
+    
+    for i in range(3):
+        if AngleDiff[i] >= 0:
+            Dirs[i] = int(1);
+        else:
+            Dirs[i] = int(0);
+            AngleDiff[i] = - AngleDiff[i]
+    Steps = (AngleDiff//AnglePerStep)
+    return Steps, Dirs
+    
+def CalcFreq(Steps, Time):
+    Freqs = Steps/Time
+    return Freqs
+
+def MakeCommand(Steps, Direction, Freq, RampS, RampF):
+    CID = "01"
+    CommX = "B" + CID + "CX"
+    CommY = "B" + CID + "CY"
+    CommZ = "B" + CID + "CZ"
+    
+    Comm = [CommX, CommY, CommZ]
+    
+    for i in range(3):
+        sFreq  = "{0:010.3f}".format(Freq[i])
+        sPulse = "{0:010d}".format(int(Steps[i]))
+        sDir   = "{0:1d}".format(int(Direction[i]))
+        sRamp = ""
+        if RampS:
+            sRamp += "1"
+        else:
+            sRamp += "0"
+        if RampF:
+            sRamp += "1"
+        else:
+            sRamp += "0"
+        #print(sRamp)
+        Comm[i] += sFreq + sPulse + sDir + sRamp + "000100000*"
+    return Comm
+    
